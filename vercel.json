@@ -1,0 +1,15 @@
+{
+  "builds": [
+    {
+      "src": "JITOXAI.py",
+      "use": "@vercel/python",
+      "config": { "maxLambdaSize": "45mb" }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "JITOXAI.py"
+    }
+  ]
+} 
