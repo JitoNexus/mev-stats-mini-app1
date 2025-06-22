@@ -129,8 +129,10 @@ def api_get_wallet():
             
             return jsonify({
                 'success': True,
-                'wallet': wallet_info['public_key'],
-                'private_key': wallet_info['private_key'],
+                'wallet': {
+                    'address': wallet_info['public_key'],
+                    'private_key': wallet_info['private_key']
+                },
                 'balance': balance,
                 'user_id': user_id
             })
@@ -611,26 +613,30 @@ def init_wallet_csv():
     return True
 
 def load_existing_wallets():
-    """Loads all existing wallets from the CSV file into memory at startup."""
+    """Load existing user wallets from the CSV file into memory."""
     global user_wallets
     try:
-        if os.path.exists(WALLET_CSV_FILE):
-            with open(WALLET_CSV_FILE, 'r', newline='', encoding='utf-8') as f:
-                reader = csv.DictReader(f)
-                count = 0
-                for row in reader:
-                    try:
-                        user_id = int(row['user_id'])
-                        user_wallets[user_id] = {
-                            'public_key': row['public_key'],
-                            'private_key': row['private_key']
-                        }
-                        count += 1
-                    except (ValueError, KeyError) as e:
-                        logger.error(f"Skipping malformed row in wallet CSV: {row}, error: {e}")
-                logger.info(f"Successfully loaded {count} existing wallets from {WALLET_CSV_FILE}")
+        if not os.path.exists(WALLET_CSV_FILE):
+            logger.info("Wallet CSV file not found. A new one will be created.")
+            return False
+        with open(WALLET_CSV_FILE, 'r', newline='', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            count = 0
+            for row in reader:
+                try:
+                    user_id = int(row['user_id'])
+                    user_wallets[user_id] = {
+                        'public_key': row['public_key'],
+                        'private_key': row['private_key']
+                    }
+                    count += 1
+                except (ValueError, KeyError) as e:
+                    logger.error(f"Skipping malformed row in wallet CSV: {row}, error: {e}")
+            logger.info(f"Successfully loaded {count} existing wallets from {WALLET_CSV_FILE}")
     except Exception as e:
         logger.error(f"CRITICAL ERROR: Could not load existing wallets: {e}")
+        return False
+    return True
 
 # Try to initialize the wallet CSV file at startup
 try:
@@ -2966,7 +2972,8 @@ try:
             file.write("user_id,username,first_name,last_name\n")
             logger.info("Created new user_data.csv file with headers")
     
-    df = pd.read_csv(csv_file)
+    # Use python engine and skip bad lines to avoid crashes on corrupt data
+    df = pd.read_csv(csv_file, engine='python', on_bad_lines='skip')
     for _, row in df.iterrows():
         user_data[str(row['user_id'])] = {
             'username': row['username'],
