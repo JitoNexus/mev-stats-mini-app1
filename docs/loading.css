@@ -1,0 +1,642 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap');
+
+:root {
+    --primary-color: #6E56CF;
+    --secondary-color: #00ff88;
+    --background: #13111C;
+    --wallet-color: #2B2640;
+    --sol-color: #00ff88;
+    --eth-color: #6E56CF;
+    --glow-primary: rgba(110, 86, 207, 0.5);
+    --glow-secondary: rgba(0, 255, 136, 0.5);
+    --cyber-grid: rgba(110, 86, 207, 0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--background);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+.loading-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: #0a0a0a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    overflow: hidden;
+}
+
+.wallet {
+    position: relative;
+    width: 200px;
+    height: 150px;
+    perspective: 1000px;
+    margin-bottom: 40px;
+    z-index: 2;
+}
+
+.wallet-body {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    animation: walletHover 3s ease-in-out infinite;
+}
+
+.wallet-front,
+.wallet-middle,
+.wallet-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: #2B2640;
+    border-radius: 15px;
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+    border: 1px solid rgba(0, 255, 255, 0.1);
+}
+
+.wallet-front {
+    transform: translateZ(10px);
+    background: linear-gradient(45deg, #2B2640, #3D355A);
+}
+
+.wallet-middle {
+    transform: translateZ(0);
+}
+
+.wallet-back {
+    transform: translateZ(-10px);
+}
+
+.loading-text {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    margin-bottom: 30px;
+    width: 100%;
+}
+
+.loading-text h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: #00ffff;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+    animation: textGlow 2s ease-in-out infinite;
+}
+
+.progress-bar {
+    width: 300px;
+    height: 4px;
+    background: rgba(0, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+    margin: 0 auto;
+}
+
+#loadingProgress {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #00ffff, #00ff88);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    position: relative;
+}
+
+#loadingProgress::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    animation: progressGlow 1.5s linear infinite;
+}
+
+.loading-status {
+    position: relative;
+    z-index: 2;
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: rgba(0, 255, 255, 0.6);
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    font-family: 'Space Grotesk', monospace;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    background: rgba(0, 255, 255, 0.3);
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.status-item.completed {
+    color: #00ffff;
+}
+
+.status-item.completed .status-dot {
+    background: #00ffff;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+
+@keyframes textGlow {
+    0%, 100% {
+        text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+    }
+    50% {
+        text-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+    }
+}
+
+@keyframes progressGlow {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.cyber-particles {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: 1;
+    opacity: 0.5;
+}
+
+.cyber-particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: #00ffff;
+    border-radius: 50%;
+    animation: float 10s linear infinite;
+}
+
+@keyframes float {
+    0% {
+        transform: translateY(100vh) scale(0);
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-100vh) scale(1);
+        opacity: 0;
+    }
+}
+
+.security-status {
+    position: absolute;
+    top: 20px;
+    display: flex;
+    gap: 20px;
+}
+
+.security-badge {
+    background: rgba(0, 255, 255, 0.1);
+    border: 1px solid rgba(0, 255, 255, 0.3);
+    padding: 8px 16px;
+    border-radius: 20px;
+    color: #00ffff;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    backdrop-filter: blur(5px);
+}
+
+.cyber-particles {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: 0;
+}
+
+.cyber-particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: #00ffff;
+    border-radius: 50%;
+    animation: float 10s linear infinite;
+}
+
+.wallet-body {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.5s ease;
+    animation: walletHover 3s ease-in-out infinite;
+}
+
+.wallet-front,
+.wallet-middle,
+.wallet-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: var(--wallet-color);
+    border-radius: 15px;
+    box-shadow: 0 0 30px rgba(110, 86, 207, 0.15);
+}
+
+.wallet-front {
+    transform: translateZ(10px);
+    background: linear-gradient(45deg, var(--wallet-color), #3D355A);
+}
+
+.wallet-middle {
+    transform: translateZ(0);
+}
+
+.wallet-back {
+    transform: translateZ(-10px);
+}
+
+.coins-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+}
+
+.coin {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 0.8rem;
+    transform-style: preserve-3d;
+    animation: coinFloat 3s ease-in-out infinite;
+}
+
+.coin-inner {
+    background: rgba(0, 255, 255, 0.9);
+    padding: 8px;
+    border-radius: 50%;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+    color: #0a0a0a;
+}
+
+.sol {
+    background: #00ffff;
+    left: -20px;
+    top: 20px;
+    animation-delay: 0.2s;
+}
+
+.eth {
+    background: #00ff88;
+    right: -20px;
+    top: 20px;
+    animation-delay: 0.4s;
+}
+
+.particles {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.text-gradient {
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    opacity: 1;
+    text-shadow: 0 0 10px rgba(110, 86, 207, 0.5);
+}
+
+/* Glowing effect */
+.wallet-body::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(110, 86, 207, 0.1) 0%, transparent 70%);
+    animation: pulse 4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 0.5;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+}
+
+/* Add Cyber Grid Background */
+.loading-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+        linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 30px 30px;
+    animation: gridMove 20s linear infinite;
+    opacity: 0.2;
+    z-index: 1;
+}
+
+/* Add Floating Particles */
+.cyber-particles {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.cyber-particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    animation: particleFloat 10s infinite linear;
+}
+
+.cyber-particle:nth-child(2n) {
+    background: var(--secondary-color);
+    animation-duration: 15s;
+}
+
+/* Add Holographic Effect */
+.wallet-front::before,
+.wallet-middle::before,
+.wallet-back::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        45deg,
+        transparent 0%,
+        rgba(0, 255, 255, 0.1) 45%,
+        rgba(0, 255, 255, 0.1) 55%,
+        transparent 100%
+    );
+    animation: holographic 3s linear infinite;
+    border-radius: 15px;
+}
+
+/* Add Loading Status */
+.loading-status {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 500;
+    text-shadow: 0 0 5px rgba(110, 86, 207, 0.3);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    animation: statusPulse 1.5s infinite;
+}
+
+/* Add Security Indicators */
+.security-status {
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+    display: flex;
+    gap: 1rem;
+}
+
+.security-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    background: rgba(0, 255, 136, 0.1);
+    color: var(--secondary-color);
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.security-badge i {
+    font-size: 1rem;
+}
+
+/* New Animations */
+@keyframes gridMove {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(30px); }
+}
+
+@keyframes particleFloat {
+    0% {
+        transform: translate(0, 0);
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        transform: translate(100px, -100px);
+        opacity: 0;
+    }
+}
+
+@keyframes holographic {
+    0% {
+        opacity: 0;
+        transform: translateX(-100%);
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+}
+
+@keyframes progressGlow {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+@keyframes statusPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.5); opacity: 0.5; }
+}
+
+@keyframes walletHover {
+    0%, 100% {
+        transform: translateY(0) rotateX(0);
+    }
+    50% {
+        transform: translateY(-10px) rotateX(5deg);
+    }
+}
+
+@keyframes coinFloat {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-15px) rotate(10deg);
+    }
+}
+
+/* Add holographic effect to wallet */
+.wallet-front::before,
+.wallet-middle::before,
+.wallet-back::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        45deg,
+        transparent 0%,
+        rgba(0, 255, 255, 0.1) 45%,
+        rgba(0, 255, 255, 0.1) 55%,
+        transparent 100%
+    );
+    animation: holographic 3s linear infinite;
+    border-radius: 15px;
+}
+
+/* Add Security Indicators */
+.security-status {
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+    display: flex;
+    gap: 1rem;
+}
+
+.security-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    background: rgba(0, 255, 136, 0.1);
+    color: var(--secondary-color);
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.security-badge i {
+    font-size: 1rem;
+}
+
+/* Add Responsive Design */
+@media (max-width: 768px) {
+    .progress-bar {
+        width: 250px;
+    }
+    
+    .security-status {
+        position: relative;
+        top: auto;
+        right: auto;
+        margin-top: 1rem;
+    }
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+    body {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    .cyber-card {
+        overflow: hidden;
+    }
+
+    .stat-value {
+        font-size: 1.5em !important;
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }
+
+    .main-content {
+        height: 100vh;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .stats-grid {
+        padding: 10px;
+    }
+
+    .cyber-card .card-content {
+        padding: 15px;
+    }
+} 

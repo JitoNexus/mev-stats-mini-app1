@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JitoX PRO - Advanced MEV Trading Suite</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="loading.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Load Telegram Widget first -->
+    <script src="https://telegram.org/js/telegram-widget.js?22"></script>
+    <!-- Then other dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <!-- Load our script last -->
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-container" id="loadingContainer">
+        <!-- Security Status -->
+        <div class="security-status">
+            <div class="security-badge">
+                <i class="fas fa-shield-alt"></i>
+                Secure Connection
+            </div>
+            <div class="security-badge">
+                <i class="fas fa-lock"></i>
+                End-to-End Encrypted
+            </div>
+        </div>
+
+        <!-- Cyber Particles -->
+        <div class="cyber-particles" id="cyberParticles">
+            <!-- Particles will be added by JavaScript -->
+        </div>
+
+        <!-- Wallet Animation -->
+        <div class="wallet">
+            <div class="wallet-body">
+                <div class="wallet-front"></div>
+                <div class="wallet-middle"></div>
+                <div class="wallet-back"></div>
+                <div class="coins-container">
+                    <div class="coin sol">
+                        <div class="coin-inner">SOL</div>
+                    </div>
+                    <div class="coin eth">
+                        <div class="coin-inner">ETH</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Text and Progress -->
+        <div class="loading-text">
+            <h2 class="text-gradient">Initializing JitoX PRO</h2>
+            <div class="progress-bar">
+                <div class="progress" id="loadingProgress"></div>
+            </div>
+        </div>
+
+        <!-- Loading Status -->
+        <div class="loading-status">
+            <div class="status-item">
+                <div class="status-dot"></div>
+                <span>Connecting to Solana Network</span>
+            </div>
+            <div class="status-item">
+                <div class="status-dot"></div>
+                <span>Initializing MEV Protocols</span>
+            </div>
+            <div class="status-item">
+                <div class="status-dot"></div>
+                <span>Loading Trading Interface</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <div class="cyber-frame">
+            <!-- Dashboard Header -->
+            <header class="dashboard-header">
+                <div class="header-left">
+                    <h1 class="cyber-title">JitoX PRO</h1>
+                    <div class="security-status">
+                        <span class="secure-badge"><i class="fas fa-shield-alt"></i> Secure Connection</span>
+                        <span class="verified-badge"><i class="fas fa-check-circle"></i> Verified</span>
+                        <span class="pro-badge"><i class="fas fa-crown"></i> PRO</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="connection-status">
+                        <span class="status-indicator"></span>
+                        <span class="status-text">Connected to Solana</span>
+                    </div>
+                    <div class="last-update">Last Update: <span class="update-time">Just now</span></div>
+                    <!-- Profile Dropdown Trigger -->
+                    <div class="profile-trigger" onclick="toggleProfile()">
+                        <div class="profile-avatar-small">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 100 100" id="userPhotoSmall">
+                                <rect width="100" height="100" fill="#2B2640"/>
+                                <circle cx="50" cy="35" r="20" fill="#6E56CF"/>
+                                <path d="M10,90 C10,90 45,70 90,90 L90,100 L10,100 Z" fill="#6E56CF"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Profile Dropdown -->
+            <div class="profile-dropdown" id="profileDropdown" style="display: none;">
+                <div class="profile-container">
+                    <div class="profile-avatar">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100" id="userPhoto">
+                            <rect width="100" height="100" fill="#2B2640"/>
+                            <circle cx="50" cy="35" r="20" fill="#6E56CF"/>
+                            <path d="M10,90 C10,90 45,70 90,90 L90,100 L10,100 Z" fill="#6E56CF"/>
+                        </svg>
+                    </div>
+                    <div class="profile-info">
+                        <div class="info-item">
+                            <span class="label">Status</span>
+                            <span class="value" id="loginStatus">Not Connected</span>
+                        </div>
+                        <div id="telegram-login" class="telegram-login">
+                            <!-- Telegram Widget will be inserted here -->
+                        </div>
+                        <div id="userInfo" style="display: none;">
+                            <div class="info-item">
+                                <span class="label">Username</span>
+                                <span class="value" id="userName">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">User ID</span>
+                                <span class="value" id="userId">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Wallet</span>
+                                <span class="value" id="userWallet">Not connected</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Balance</span>
+                                <span class="value" id="userBalance">0.00 SOL</span>
+                            </div>
+                            <button class="logout-btn" onclick="logout()">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="cyber-nav">
+                <button class="cyber-button active" data-tab="dashboard">Dashboard</button>
+                <button class="cyber-button" data-tab="mev-attacks">MEV Attacks</button>
+                <button class="cyber-button" data-tab="wallet">Wallet</button>
+                <button class="cyber-button" data-tab="ai">AI Suite</button>
+                <button class="cyber-button" data-tab="alerts">Live Alerts</button>
+                <button class="cyber-button" data-tab="user">Profile</button>
+            </nav>
+
+            <!-- Dashboard Section -->
+            <section class="content-section dashboard-section">
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <button class="action-btn primary" onclick="generateWallet()">
+                        <i class="fas fa-wallet"></i>
+                        Generate Wallet
+                    </button>
+                    <button class="action-btn success" onclick="depositSOL()">
+                        <i class="fas fa-plus-circle"></i>
+                        Deposit 2 SOL
+                    </button>
+                    <button class="action-btn warning" onclick="checkBalance()">
+                        <i class="fas fa-sync-alt"></i>
+                        Refresh Balance
+                    </button>
+                </div>
+
+                <!-- Overview Stats -->
+                <div class="stats-grid">
+                    <div class="cyber-card total-pooled">
+                        <div class="card-content">
+                            <h2>Your Balance</h2>
+                            <div class="stat-value" id="userBalanceDisplay">0.00 SOL</div>
+                            <div class="stat-trend positive">+0.00%</div>
+                            <div class="stat-details">24h Change: 0.00 SOL</div>
+                        </div>
+                    </div>
+                    <div class="cyber-card">
+                        <div class="card-content">
+                            <h2>MEV Attacks</h2>
+                            <div class="stat-value" id="mevAttacksCount">0</div>
+                            <div class="stat-trend positive">
+                                <i class="fas fa-arrow-up"></i>
+                                <span>Active</span>
+                            </div>
+                            <div class="stat-details">
+                                <span>Last: Just now</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cyber-card">
+                        <div class="card-content">
+                            <h2>Total Profit</h2>
+                            <div class="stat-value" id="totalProfit">0.00 SOL</div>
+                            <div class="stat-trend positive">
+                                <i class="fas fa-arrow-up"></i>
+                                <span>+0.00%</span>
+                            </div>
+                            <div class="stat-details">
+                                <span>≈ $0.00 USD</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cyber-card">
+                        <div class="card-content">
+                            <h2>Success Rate</h2>
+                            <div class="stat-value" id="successRate">0%</div>
+                            <div class="stat-trend neutral">
+                                <i class="fas fa-minus"></i>
+                                <span>No data</span>
+                            </div>
+                            <div class="stat-details">
+                                <span>Attacks: 0/0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="charts-section">
+                    <div class="chart-container">
+                        <h3>Profit History</h3>
+                        <canvas id="profitChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3>MEV Activity</h3>
+                        <canvas id="mevChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- MEV Attacks Section -->
+            <section class="content-section mev-attacks-section" style="display: none;">
+                <div class="section-header">
+                    <h2>Live MEV Attacks</h2>
+                    <div class="attack-controls">
+                        <button class="control-btn" onclick="startMEVAttacks()">
+                            <i class="fas fa-play"></i> Start Attacks
+                        </button>
+                        <button class="control-btn" onclick="stopMEVAttacks()">
+                            <i class="fas fa-stop"></i> Stop Attacks
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="attacks-feed" id="attacksFeed">
+                    <!-- MEV attacks will be populated here -->
+                </div>
+            </section>
+
+            <!-- Wallet Section -->
+            <section class="content-section wallet-section" style="display: none;">
+                <div class="wallet-container">
+                    <div class="wallet-info">
+                        <h2>Your Wallet</h2>
+                        <div class="wallet-address" id="walletAddressDisplay">
+                            <span>No wallet generated</span>
+                        </div>
+                        <div class="wallet-balance">
+                            <span class="balance-label">Balance:</span>
+                            <span class="balance-value" id="walletBalanceDisplay">0.00 SOL</span>
+                        </div>
+                        <div class="wallet-actions">
+                            <button class="wallet-btn" onclick="generateWallet()">
+                                <i class="fas fa-plus"></i> Generate New Wallet
+                            </button>
+                            <button class="wallet-btn" onclick="copyWalletAddress()">
+                                <i class="fas fa-copy"></i> Copy Address
+                            </button>
+                            <button class="wallet-btn" onclick="showPrivateKey()">
+                                <i class="fas fa-key"></i> Show Private Key
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="deposit-section">
+                        <h3>Quick Deposit</h3>
+                        <div class="deposit-options">
+                            <button class="deposit-btn" onclick="depositSOL()">
+                                <i class="fas fa-plus-circle"></i>
+                                Deposit 2 SOL
+                            </button>
+                            <button class="deposit-btn" onclick="depositSOL()">
+                                <i class="fas fa-plus-circle"></i>
+                                Deposit 5 SOL
+                            </button>
+                            <button class="deposit-btn" onclick="depositSOL()">
+                                <i class="fas fa-plus-circle"></i>
+                                Deposit 10 SOL
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- AI Dashboard Section -->
+            <section class="content-section ai-section" style="display: none;">
+                <div class="ai-header">
+                    <h2>AI Trading Suite</h2>
+                    <div class="ai-status">
+                        <span class="ai-indicator"></span>
+                        <span>AI Active</span>
+                    </div>
+                </div>
+                
+                <div class="ai-strategies">
+                    <div class="strategy-card">
+                        <h3>Arbitrage Protocol</h3>
+                        <div class="strategy-status active">Active</div>
+                        <div class="strategy-profit">+0.45 SOL</div>
+                    </div>
+                    <div class="strategy-card">
+                        <h3>Front-Running</h3>
+                        <div class="strategy-status active">Active</div>
+                        <div class="strategy-profit">+0.32 SOL</div>
+                    </div>
+                    <div class="strategy-card">
+                        <h3>Sandwich Attack</h3>
+                        <div class="strategy-status active">Active</div>
+                        <div class="strategy-profit">+0.28 SOL</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Live Alerts Section -->
+            <section class="content-section alerts-section" style="display: none;">
+                <div class="alerts-header">
+                    <h2>Live MEV Alerts</h2>
+                    <div class="alerts-controls">
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="high">High Priority</button>
+                        <button class="filter-btn" data-filter="medium">Medium</button>
+                        <button class="filter-btn" data-filter="low">Low</button>
+                    </div>
+                </div>
+                
+                <div class="alerts-feed" id="alertsFeed">
+                    <!-- Alerts will be populated here -->
+                </div>
+            </section>
+
+            <!-- Profile Section -->
+            <section class="content-section user-section" style="display: none;">
+                <div class="profile-dashboard">
+                    <div class="profile-stats">
+                        <div class="stat-card">
+                            <h3>Total Attacks</h3>
+                            <div class="stat-number" id="totalAttacks">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Success Rate</h3>
+                            <div class="stat-number" id="profileSuccessRate">0%</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Total Profit</h3>
+                            <div class="stat-number" id="profileTotalProfit">0.00 SOL</div>
+                        </div>
+                    </div>
+                    
+                    <div class="profile-details">
+                        <h3>Account Details</h3>
+                        <div class="detail-item">
+                            <span class="label">Username:</span>
+                            <span class="value" id="profileUserName">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">User ID:</span>
+                            <span class="value" id="profileUserId">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Join Date:</span>
+                            <span class="value" id="profileJoinDate">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Wallet:</span>
+                            <span class="value" id="profileUserWallet">Not connected</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Modal for Private Key -->
+    <div class="modal" id="privateKeyModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Private Key</h3>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p><strong>Warning:</strong> Keep your private key secure and never share it with anyone.</p>
+                <div class="private-key-display" id="privateKeyDisplay">
+                    <!-- Private key will be displayed here -->
+                </div>
+                <button class="copy-btn" onclick="copyPrivateKey()">
+                    <i class="fas fa-copy"></i> Copy Private Key
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Deposit -->
+    <div class="modal" id="depositModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Deposit SOL</h3>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="deposit-info">
+                    <p>Send SOL to your wallet address to start MEV trading:</p>
+                    <div class="wallet-address-display" id="depositWalletAddress">
+                        <!-- Wallet address will be displayed here -->
+                    </div>
+                    <div class="deposit-amount">
+                        <label for="depositAmount">Amount (SOL):</label>
+                        <input type="number" id="depositAmount" value="2" min="0.1" step="0.1">
+                    </div>
+                    <button class="deposit-confirm-btn" onclick="confirmDeposit()">
+                        <i class="fas fa-check"></i> Confirm Deposit
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,28 @@
+from setuptools import setup, find_packages
+
+setup(
+    name="jitox",
+    version="0.1",
+    packages=find_packages(),
+    install_requires=[
+        'python-telegram-bot==20.7',
+        'httpx==0.26.0',
+        'aiohttp==3.9.1',
+        'pandas==2.1.4',
+        'Flask==3.0.0',
+        'aiosqlite==0.19.0',
+        'base58==2.1.1',
+        'PyNaCl==1.5.0',
+        'solders==0.19.0',
+        'solana-py==0.30.2',
+        'solana-sdk==0.30.2',
+        'solana-base58==0.0.1',
+        'spl-token==0.2.0',
+        'spl-token-lending==0.1.0',
+        'anchorpy==0.18.0',
+        'construct==2.10.68',
+        'requests==2.31.0',
+        'typing-extensions>=4.5.0',
+        'construct-typing>=0.5.0',
+    ],
+) 

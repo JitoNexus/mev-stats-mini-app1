@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JitoX Broadcast System</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #3B82F6;
+            --background: #1A1B1E;
+            --card: #2A2B2E;
+            --text: #E5E7EB;
+        }
+        body {
+            background-color: var(--background);
+            color: var(--text);
+        }
+        .card {
+            background-color: var(--card);
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold">👾 JitoX Broadcast System</h1>
+            <div class="text-right">
+                <p class="text-sm opacity-80">Total Users</p>
+                <p class="text-2xl font-bold text-blue-500">{{ user_count }}</p>
+            </div>
+        </div>
+
+        <div class="card p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4">Compose Message</h2>
+            <form id="messageForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Message</label>
+                    <textarea id="message" name="message" rows="4" 
+                        class="w-full bg-gray-800 border border-gray-700 rounded-md p-2"></textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">Image</label>
+                    <input type="file" id="image" name="image" accept="image/*,video/*" 
+                        class="w-full bg-gray-800 border border-gray-700 rounded-md p-2">
+                </div>
+
+                <div id="buttons-container">
+                    <label class="block text-sm font-medium mb-2">Buttons</label>
+                    <div class="button-row flex space-x-2 mb-2">
+                        <input type="text" placeholder="Button Text" class="button-text w-1/2 bg-gray-800 border border-gray-700 rounded-md p-2">
+                        <input type="url" placeholder="Button URL" class="button-url w-1/2 bg-gray-800 border border-gray-700 rounded-md p-2">
+                    </div>
+                </div>
+                
+                <button type="button" onclick="addButtonRow()" 
+                    class="text-sm text-blue-400 hover:text-blue-300">+ Add Button</button>
+
+                <div class="flex justify-end">
+                    <button type="submit" 
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+                        Send Broadcast
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="card p-6">
+                <h2 class="text-xl font-semibold mb-4">Broadcast Statistics</h2>
+                <canvas id="statsChart"></canvas>
+            </div>
+            
+            <div class="card p-6">
+                <h2 class="text-xl font-semibold mb-4">Recent Broadcasts</h2>
+                <div class="space-y-4">
+                    {% for stat in stats %}
+                    <div class="border-b border-gray-700 pb-4">
+                        <div class="text-sm text-gray-400">{{ stat.date }}</div>
+                        <div class="mt-1">Sent: {{ stat.sent }}/{{ stat.total_users }}</div>
+                        <div class="text-green-400">Read: {{ stat.total_reads }}/{{ stat.sent }}</div>
+                        <div class="text-blue-400">Button Clicks: {{ stat.total_clicks }}</div>
+                        <div class="text-red-400">Failed: {{ stat.failed }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add button row functionality
+        function addButtonRow() {
+            const container = document.getElementById('buttons-container');
+            const row = document.createElement('div');
+            row.className = 'button-row flex space-x-2 mb-2';
+            row.innerHTML = `
+                <input type="text" placeholder="Button Text" class="button-text w-1/2 bg-gray-800 border border-gray-700 rounded-md p-2">
+                <input type="url" placeholder="Button URL" class="button-url w-1/2 bg-gray-800 border border-gray-700 rounded-md p-2">
+                <button type="button" onclick="this.parentElement.remove()" class="text-red-400 hover:text-red-300 px-2">×</button>
+            `;
+            container.appendChild(row);
+        }
+
+        // Form submission handler
+        document.getElementById('messageForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('message', document.getElementById('message').value);
+            
+            const imageInput = document.getElementById('image');
+            if (imageInput.files.length > 0) {
+                formData.append('image', imageInput.files[0]);
+            }
+            
+            // Collect buttons - format as array of arrays
+            const buttons = [];
+            document.querySelectorAll('.button-row').forEach(row => {
+                const text = row.querySelector('.button-text').value;
+                const url = row.querySelector('.button-url').value;
+                if (text && url) {
+                    buttons.push([text, url]); // Remove extra array nesting
+                }
+            });
+            formData.append('buttons', JSON.stringify(buttons));
+
+            try {
+                const response = await fetch('/send_message', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert('Message sent successfully!');
+                    location.reload();
+                } else {
+                    alert('Error sending message: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error sending message: ' + error);
+            }
+        });
+
+        // Your existing JavaScript with dark mode Chart.js options
+        const ctx = document.getElementById('statsChart').getContext('2d');
+        const statsData = JSON.parse('{{ stats|tojson|safe }}');
+
+        Chart.defaults.color = '#E5E7EB';
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: statsData.map(stat => stat.date),
+                datasets: [{
+                    label: 'Messages Sent',
+                    data: statsData.map(stat => stat.sent),
+                    borderColor: '#3B82F6',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: '#374151'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: '#374151'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

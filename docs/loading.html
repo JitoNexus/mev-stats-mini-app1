@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JitoX - Loading</title>
+    <link rel="stylesheet" href="loading.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="loading-container" id="loadingContainer">
+        <!-- Security Status -->
+        <div class="security-status">
+            <div class="security-badge">
+                <i class="fas fa-shield-alt"></i>
+                Secure Connection
+            </div>
+            <div class="security-badge">
+                <i class="fas fa-lock"></i>
+                End-to-End Encrypted
+            </div>
+        </div>
+
+        <!-- Cyber Particles -->
+        <div class="cyber-particles" id="cyberParticles">
+            <!-- Particles will be added by JavaScript -->
+        </div>
+
+        <!-- Wallet Animation -->
+        <div class="wallet">
+            <div class="wallet-body">
+                <div class="wallet-front"></div>
+                <div class="wallet-middle"></div>
+                <div class="wallet-back"></div>
+                <div class="coins-container">
+                    <div class="coin sol">
+                        <div class="coin-inner">SOL</div>
+                    </div>
+                    <div class="coin eth">
+                        <div class="coin-inner">ETH</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Text and Progress -->
+        <div class="loading-text">
+            <h2 class="text-gradient">Initializing JitoX</h2>
+            <div class="progress-bar">
+                <div class="progress" id="loadingProgress"></div>
+            </div>
+        </div>
+
+        <!-- Loading Status -->
+        <div class="loading-status">
+            <div class="status-item">
+                <div class="status-dot"></div>
+                <span>Connecting to Network</span>
+            </div>
+            <div class="status-item">
+                <div class="status-dot"></div>
+                <span>Syncing Data</span>
+            </div>
+            <div class="status-item">
+                <div class="status-dot"></div>
+                <span>Loading Interface</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content" id="mainContent">
+        <!-- Your main content here -->
+    </div>
+
+    <script>
+        // Debug logging
+        console.log('Loading script initialized');
+
+        // Get DOM elements
+        const loadingContainer = document.getElementById('loadingContainer');
+        const progress = document.getElementById('loadingProgress');
+        const mainContent = document.getElementById('mainContent');
+        const statusItems = document.querySelectorAll('.status-item');
+        
+        // Ensure loading container is visible
+        loadingContainer.style.display = 'flex';
+        console.log('Loading container display:', loadingContainer.style.display);
+        
+        // Initialize progress
+        let currentProgress = 0;
+        console.log('Starting progress animation');
+        
+        const interval = setInterval(() => {
+            currentProgress += 1;
+            progress.style.width = `${currentProgress}%`;
+            console.log('Progress:', currentProgress + '%');
+            
+            // Update status items
+            if (currentProgress >= 30) {
+                statusItems[0].classList.add('completed');
+                console.log('First status completed');
+            }
+            if (currentProgress >= 60) {
+                statusItems[1].classList.add('completed');
+                console.log('Second status completed');
+            }
+            if (currentProgress >= 90) {
+                statusItems[2].classList.add('completed');
+                console.log('Third status completed');
+            }
+            
+            if (currentProgress >= 100) {
+                clearInterval(interval);
+                console.log('Progress complete, hiding loading screen');
+                setTimeout(() => {
+                    loadingContainer.classList.add('hidden');
+                    mainContent.classList.add('visible');
+                    console.log('Main content shown');
+                }, 500);
+            }
+        }, 30);
+
+        // Create and animate particles
+        const particlesContainer = document.getElementById('cyberParticles');
+        console.log('Creating particles');
+        
+        for (let i = 0; i < 20; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'cyber-particle';
+            particle.style.left = `${Math.random() * 100}%`;
+            particle.style.top = `${Math.random() * 100}%`;
+            particle.style.animationDelay = `${Math.random() * 10}s`;
+            particlesContainer.appendChild(particle);
+        }
+        
+        // Log when document is fully loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Document fully loaded');
+        });
+    </script>
+</body>
+</html> 
