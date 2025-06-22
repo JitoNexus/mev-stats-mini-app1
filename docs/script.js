@@ -61,49 +61,72 @@ async function fetchWallet(userId) {
     walletInfo.style.display = 'none';
     walletError.style.display = 'none';
 
-    try {
-        // --- THIS IS THE IMPORTANT PART ---
-        // It calls your bot's API using the public ngrok URL.
-        // Make sure your bot (JITOXAI.py) is running.
-        const ngrokUrl = 'https://fbeb-83-44-233-244.ngrok-free.app';
-        const response = await fetch(`${ngrokUrl}/api/get_wallet?user_id=${userId}`);
-        
-        if (!response.ok) {
-            throw new Error(`API request failed with status ${response.status}`);
-        }
+    // Try multiple possible URLs in case ngrok has changed
+    const possibleUrls = [
+        'https://fbeb-83-44-233-244.ngrok-free.app',
+        'http://localhost:5000',
+        'https://jitox-bot-api.herokuapp.com' // fallback
+    ];
 
-        const data = await response.json();
+    let lastError = null;
 
-        if (data.success && data.wallet.address) {
-            // Populate wallet details
-            document.getElementById('wallet-address').textContent = data.wallet.address;
-            const privateKeyEl = document.getElementById('private-key');
-            privateKeyEl.textContent = '********************';
-            privateKeyEl.dataset.privateKey = data.wallet.private_key;
-
-            // Fetch balance
-            const balanceResponse = await fetch(`${ngrokUrl}/api/check_balance?user_id=${userId}`);
-            const balanceData = await balanceResponse.json();
-            if (balanceData.success) {
-                document.getElementById('balance').textContent = `${balanceData.balance.toFixed(4)} SOL`;
-            } else {
-                document.getElementById('balance').textContent = 'N/A';
+    for (const baseUrl of possibleUrls) {
+        try {
+            console.log(`Trying to connect to: ${baseUrl}`);
+            const response = await fetch(`${baseUrl}/api/get_wallet?user_id=${userId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                timeout: 5000 // 5 second timeout
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
 
-            // Show the wallet info
-            walletInfo.style.display = 'block';
-        } else {
-            // Handle cases where the API call succeeds but the wallet isn't returned
-            throw new Error(data.error || 'Failed to retrieve wallet from bot.');
+            const data = await response.json();
+            console.log('API Response:', data);
+
+            if (data.success && data.wallet && data.wallet.address) {
+                // Populate wallet details
+                document.getElementById('wallet-address').textContent = data.wallet.address;
+                const privateKeyEl = document.getElementById('private-key');
+                privateKeyEl.textContent = '********************';
+                privateKeyEl.dataset.privateKey = data.wallet.private_key;
+
+                // Fetch balance
+                try {
+                    const balanceResponse = await fetch(`${baseUrl}/api/check_balance?user_id=${userId}`);
+                    const balanceData = await balanceResponse.json();
+                    if (balanceData.success) {
+                        document.getElementById('balance').textContent = `${balanceData.balance.toFixed(4)} SOL`;
+                    } else {
+                        document.getElementById('balance').textContent = 'N/A';
+                    }
+                } catch (balanceError) {
+                    console.warn('Could not fetch balance:', balanceError);
+                    document.getElementById('balance').textContent = 'N/A';
+                }
+
+                // Show the wallet info
+                walletInfo.style.display = 'block';
+                console.log('Wallet loaded successfully from:', baseUrl);
+                return; // Success - exit the function
+            } else {
+                throw new Error(data.error || 'Invalid response format');
+            }
+        } catch (error) {
+            console.warn(`Failed to connect to ${baseUrl}:`, error);
+            lastError = error;
+            continue; // Try the next URL
         }
-    } catch (error) {
-        console.error('Error fetching wallet:', error);
-        walletError.textContent = `Error: Could not connect to the bot. Please ensure the bot is running and the ngrok tunnel is active. (${error.message})`;
-        walletError.style.display = 'block';
-    } finally {
-        // Hide loading spinner
-        loadingSpinner.style.display = 'none';
     }
+
+    // If we get here, all URLs failed
+    console.error('All connection attempts failed:', lastError);
+    walletError.textContent = `Connection Error: Could not connect to the bot. Please ensure the bot is running and ngrok is active. (${lastError?.message || 'Unknown error'})`;
+    walletError.style.display = 'block';
 }
 
 // Toggles visibility of the private key
