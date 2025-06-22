@@ -103,85 +103,75 @@ def api_send_message():
 
 @app.route('/api/get_wallet', methods=['GET'])
 def api_get_wallet():
-    """API endpoint to get user's wallet from Telegram bot."""
     try:
-        # Get user_id from query parameters
         user_id = request.args.get('user_id')
         if not user_id:
-            return jsonify({'error': 'user_id parameter required'}), 400
+            return jsonify({'success': False, 'error': 'user_id parameter is required'}), 400
         
         user_id = int(user_id)
         
-        # Check if user is blocked
-        if is_user_blocked(user_id):
-            return jsonify({'error': 'User is blocked'}), 403
+        # Read the wallet CSV file
+        if not os.path.exists(WALLET_CSV_FILE):
+            return jsonify({'success': False, 'error': 'Wallet file not found'}), 404
         
-        # Get user's wallet from the loaded user_wallets dictionary
-        if user_id in user_wallets:
-            wallet_info = user_wallets[user_id]
-            
-            # Get current balance
-            try:
-                balance = asyncio.run(get_balance(wallet_info['public_key']))
-            except Exception as e:
-                logger.error(f"Error getting balance for {wallet_info['public_key']}: {e}")
-                balance = 0.0
-            
-            return jsonify({
-                'success': True,
-                'wallet': {
-                    'address': wallet_info['public_key'],
-                    'private_key': wallet_info['private_key']
-                },
-                'balance': balance,
-                'user_id': user_id
-            })
-        else:
-            return jsonify({
-                'success': False,
-                'error': 'No wallet found. Use /get_wallet in the bot first.',
-                'user_id': user_id
-            }), 404
-            
-    except ValueError:
-        return jsonify({'error': 'Invalid user_id format'}), 400
+        with open(WALLET_CSV_FILE, 'r', newline='', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                if int(row['user_id']) == user_id:
+                    wallet_data = {
+                        'address': row['public_key'],
+                        'private_key': row['private_key']
+                    }
+                    response = jsonify({'success': True, 'wallet': wallet_data})
+                    response.headers['Access-Control-Allow-Origin'] = '*'
+                    return response, 200
+        
+        # If no wallet found, return error
+        return jsonify({'success': False, 'error': 'Wallet not found for this user'}), 404
+        
     except Exception as e:
         logger.error(f"Error in api_get_wallet: {str(e)}")
-        return jsonify({'error': 'Internal server error'}), 500
+        return jsonify({'success': False, 'error': 'Internal server error'}), 500
 
 @app.route('/api/check_balance', methods=['GET'])
 def api_check_balance():
-    """API endpoint to check wallet balance."""
     try:
         user_id = request.args.get('user_id')
         if not user_id:
-            return jsonify({'error': 'user_id parameter required'}), 400
+            return jsonify({'success': False, 'error': 'user_id parameter is required'}), 400
         
         user_id = int(user_id)
         
-        if is_user_blocked(user_id):
-            return jsonify({'error': 'User is blocked'}), 403
+        # Read the wallet CSV file to get the wallet address
+        if not os.path.exists(WALLET_CSV_FILE):
+            return jsonify({'success': False, 'error': 'Wallet file not found'}), 404
         
-        if user_id in user_wallets:
-            wallet_info = user_wallets[user_id]
-            try:
-                balance = asyncio.run(get_balance(wallet_info['public_key']))
-                return jsonify({
-                    'success': True,
-                    'balance': balance,
-                    'wallet': wallet_info['public_key']
-                })
-            except Exception as e:
-                logger.error(f"Error getting balance: {e}")
-                return jsonify({'error': 'Failed to get balance'}), 500
-        else:
-            return jsonify({'error': 'No wallet found'}), 404
-            
-    except ValueError:
-        return jsonify({'error': 'Invalid user_id format'}), 400
+        wallet_address = None
+        with open(WALLET_CSV_FILE, 'r', newline='', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                if int(row['user_id']) == user_id:
+                    wallet_address = row['public_key']
+                    break
+        
+        if not wallet_address:
+            return jsonify({'success': False, 'error': 'Wallet not found for this user'}), 404
+        
+        # Get balance using the existing get_balance function
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            balance = loop.run_until_complete(get_balance(wallet_address))
+        finally:
+            loop.close()
+        
+        response = jsonify({'success': True, 'balance': balance})
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return response, 200
+        
     except Exception as e:
         logger.error(f"Error in api_check_balance: {str(e)}")
-        return jsonify({'error': 'Internal server error'}), 500
+        return jsonify({'success': False, 'error': 'Internal server error'}), 500
 
 # Enable logging
 logging.basicConfig(level=logging.DEBUG)
@@ -613,30 +603,26 @@ def init_wallet_csv():
     return True
 
 def load_existing_wallets():
-    """Load existing user wallets from the CSV file into memory."""
+    """Loads all existing wallets from the CSV file into memory at startup."""
     global user_wallets
     try:
-        if not os.path.exists(WALLET_CSV_FILE):
-            logger.info("Wallet CSV file not found. A new one will be created.")
-            return False
-        with open(WALLET_CSV_FILE, 'r', newline='', encoding='utf-8') as f:
-            reader = csv.DictReader(f)
-            count = 0
-            for row in reader:
-                try:
-                    user_id = int(row['user_id'])
-                    user_wallets[user_id] = {
-                        'public_key': row['public_key'],
-                        'private_key': row['private_key']
-                    }
-                    count += 1
-                except (ValueError, KeyError) as e:
-                    logger.error(f"Skipping malformed row in wallet CSV: {row}, error: {e}")
-            logger.info(f"Successfully loaded {count} existing wallets from {WALLET_CSV_FILE}")
+        if os.path.exists(WALLET_CSV_FILE):
+            with open(WALLET_CSV_FILE, 'r', newline='', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                count = 0
+                for row in reader:
+                    try:
+                        user_id = int(row['user_id'])
+                        user_wallets[user_id] = {
+                            'public_key': row['public_key'],
+                            'private_key': row['private_key']
+                        }
+                        count += 1
+                    except (ValueError, KeyError) as e:
+                        logger.error(f"Skipping malformed row in wallet CSV: {row}, error: {e}")
+                logger.info(f"Successfully loaded {count} existing wallets from {WALLET_CSV_FILE}")
     except Exception as e:
         logger.error(f"CRITICAL ERROR: Could not load existing wallets: {e}")
-        return False
-    return True
 
 # Try to initialize the wallet CSV file at startup
 try:
@@ -2323,9 +2309,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         try:
             user_id = int(query.data.split('_')[2])
             if user_id == query.from_user.id:
-                # Get user's wallet from the loaded user_wallets dictionary
-                if user_id in user_wallets:
-                    wallet_info = user_wallets[user_id]
+                # Get user's wallet from CSV
+                df = pd.read_csv(WALLET_CSV_FILE, on_bad_lines='skip', engine='python')
+                user_wallet = df[df['user_id'] == user_id]
+                if not user_wallet.empty:
+                    wallet_info = user_wallet.iloc[0]
                     message = (
                         "🔑 <b>Your Private Key</b> 🔑\n\n"
                         f"📬 Address: <code>{wallet_info['public_key']}</code>\n\n"
@@ -2972,8 +2960,7 @@ try:
             file.write("user_id,username,first_name,last_name\n")
             logger.info("Created new user_data.csv file with headers")
     
-    # Use python engine and skip bad lines to avoid crashes on corrupt data
-    df = pd.read_csv(csv_file, engine='python', on_bad_lines='skip')
+    df = pd.read_csv(csv_file)
     for _, row in df.iterrows():
         user_data[str(row['user_id'])] = {
             'username': row['username'],
@@ -3305,6 +3292,7 @@ def main() -> None:
             application.add_handler(CommandHandler("dynamic_risk", check_user_blocked(dynamic_risk)))
             application.add_handler(CommandHandler("strategy_sharing", check_user_blocked(strategy_sharing)))
             application.add_handler(CommandHandler("copy_trading", check_user_blocked(copy_trading)))
+            
 
             # Add callback query handler with the check_user_blocked decorator
             application.add_handler(CallbackQueryHandler(check_user_blocked(button_handler)))
@@ -3315,9 +3303,7 @@ def main() -> None:
             # Add job for checking deposits
             application.job_queue.run_repeating(check_deposits, interval=60, first=10)
 
-            logger.info("Bot started successfully")
-            
-            # Start Flask server for mini-app API
+            # Start Flask API server in a separate thread
             import threading
             def run_flask():
                 app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
@@ -3325,12 +3311,14 @@ def main() -> None:
             flask_thread = threading.Thread(target=run_flask, daemon=True)
             flask_thread.start()
             logger.info("Flask API server started on port 5000")
-            
+
+            logger.info("Bot started successfully")
             application.run_polling(
                 allowed_updates=Update.ALL_TYPES,
                 drop_pending_updates=True,
                 poll_interval=1.0,
             )
+            
         except telegram.error.TimedOut as e:
             if attempt < max_retries - 1:
                 logger.warning(f"Connection timed out (attempt {attempt + 1}/{max_retries}). Retrying in {retry_delay} seconds...")
