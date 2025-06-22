@@ -62,104 +62,71 @@ async function fetchWallet(userId) {
     walletError.style.display = 'none';
 
     try {
-        console.log(`Fetching wallet for user ID: ${userId}`);
+        // Use the public ngrok URL to connect to your local bot
+        const apiUrl = 'https://f872-83-44-233-244.ngrok-free.app';
         
-        // Try to connect to the real bot API
-        const apiUrls = [
-            'http://localhost:5000',
-            'http://127.0.0.1:5000',
-            'https://your-ngrok-url.ngrok.io' // Replace with your actual ngrok URL when you set it up
-        ];
+        console.log(`Fetching wallet from: ${apiUrl} for user ID: ${userId}`);
         
-        let lastError = null;
-        
-        for (const apiUrl of apiUrls) {
-            try {
-                console.log(`Trying to connect to: ${apiUrl}`);
-                
-                const response = await fetch(`${apiUrl}/api/get_wallet?user_id=${userId}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                });
-                
-                console.log(`Response status from ${apiUrl}:`, response.status);
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('Real API Response:', data);
+        // First try to get the wallet
+        const response = await fetch(`${apiUrl}/api/get_wallet?user_id=${userId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
 
-                    if (data.success && data.wallet && data.wallet.address) {
-                        // Populate wallet details with REAL data
-                        document.getElementById('wallet-address').textContent = data.wallet.address;
-                        const privateKeyEl = document.getElementById('private-key');
-                        privateKeyEl.textContent = '********************';
-                        privateKeyEl.dataset.privateKey = data.wallet.private_key;
-
-                        // Fetch real balance
-                        try {
-                            const balanceResponse = await fetch(`${apiUrl}/api/check_balance?user_id=${userId}`, {
-                                method: 'GET',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                            });
-                            
-                            if (balanceResponse.ok) {
-                                const balanceData = await balanceResponse.json();
-                                if (balanceData.success) {
-                                    document.getElementById('balance').textContent = `${balanceData.balance.toFixed(4)} SOL`;
-                                } else {
-                                    document.getElementById('balance').textContent = 'N/A';
-                                }
-                            } else {
-                                document.getElementById('balance').textContent = 'N/A';
-                            }
-                        } catch (balanceError) {
-                            console.warn('Could not fetch balance:', balanceError);
-                            document.getElementById('balance').textContent = 'N/A';
-                        }
-
-                        // Show the wallet info
-                        walletInfo.style.display = 'block';
-                        console.log(`Wallet loaded successfully from: ${apiUrl}`);
-                        return; // Success - exit the function
-                    } else {
-                        throw new Error(data.error || 'Invalid response format');
-                    }
-                } else {
-                    const errorText = await response.text();
-                    console.warn(`API ${apiUrl} failed:`, response.status, errorText);
-                    throw new Error(`API request failed: ${response.status}`);
-                }
-            } catch (error) {
-                console.warn(`Failed to connect to ${apiUrl}:`, error);
-                lastError = error;
-                continue; // Try next URL
-            }
+        if (!response.ok) {
+            throw new Error(`Network response was not ok, status: ${response.status}`);
         }
-        
-        // If we get here, all API attempts failed
-        throw lastError || new Error('Could not connect to any API endpoint');
-        
+
+        const data = await response.json();
+
+        if (data.success && data.wallet) {
+            const walletAddress = data.wallet.address;
+            const privateKey = data.wallet.private_key;
+
+            document.getElementById('wallet-address').textContent = walletAddress;
+            document.getElementById('private-key').textContent = privateKey;
+            
+            walletInfo.style.display = 'block';
+            
+            // Check balance after getting wallet
+            await checkBalance(userId, apiUrl, walletAddress);
+            
+        } else {
+            throw new Error(data.error || 'Wallet not found for this user.');
+        }
+
     } catch (error) {
-        console.error('Failed to fetch wallet:', error);
-        walletError.innerHTML = `
-            <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 10px 0;">
-                <strong>⚠️ Connection Error:</strong><br>
-                ${error?.message || 'Unknown error'}<br><br>
-                <strong>To fix this:</strong><br>
-                1. Make sure your bot is running: <code>python JITOXAI.py</code><br>
-                2. Install ngrok: <code>npm install -g ngrok</code><br>
-                3. Run ngrok: <code>ngrok http 5000</code><br>
-                4. Update the script.js file with your ngrok URL<br><br>
-                <strong>Current Status:</strong> Mini-app is trying to connect to your bot but can't reach it from the web.
-            </div>
-        `;
+        console.error('Error fetching wallet:', error);
+        walletError.textContent = `Failed to load wallet. Error: ${error.message}. Please try again later.`;
         walletError.style.display = 'block';
     } finally {
         loadingSpinner.style.display = 'none';
+    }
+}
+
+async function checkBalance(userId, apiUrl, walletAddress) {
+    const balanceInfo = document.getElementById('balance-info');
+    const balanceError = document.getElementById('balance-error');
+    balanceInfo.textContent = 'Checking balance...';
+    balanceError.style.display = 'none';
+
+    try {
+        const response = await fetch(`${apiUrl}/api/check_balance?user_id=${userId}`);
+        if (!response.ok) {
+            throw new Error(`Network response was not ok, status: ${response.status}`);
+        }
+        const data = await response.json();
+        if (data.success) {
+            balanceInfo.textContent = `Balance: ${data.balance.toFixed(4)} SOL`;
+        } else {
+            throw new Error(data.error || 'Failed to check balance.');
+        }
+    } catch (error) {
+        console.error('Error checking balance:', error);
+        balanceError.textContent = `Error: ${error.message}`;
+        balanceError.style.display = 'block';
     }
 }
 
